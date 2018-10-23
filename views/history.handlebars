@@ -1,0 +1,211 @@
+<div class="container">
+<div class="row">
+	<div class="col-lg-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">借阅历史</h4>
+      </div>
+      <div class="panel-body">
+
+      	<div class="row search-box">
+	        <div class="col-lg-1 col-lg-offset-2"></div>
+	        <div class="col-lg-7">
+	          <div class="input-group">
+	            <input id="isbn" type="text" class="form-control" placeholder="扫码输入ISBN" readonly>
+	            <span class="input-group-btn">
+	              <button id="manual-input" class="btn btn-default" type="button">手工输入</button>
+	            </span>
+	          </div>
+	        </div>
+	    </div>
+
+	    <div class="row" id="type">
+	    	<h4 data="0" class="col-sm-6 btn btn-info">未还</h4>
+	    	<h4 data="1" class="col-sm-6 btn btn-default">已还</h4>
+	    </div>
+	    <hr>
+		<div class="table-responsive">
+			<table class="table table-condensed">
+				<thead>
+					<tr>
+						<th>书号</th>
+						<th>书名</th>
+						<th>借阅人学号</th>
+						<th>借阅人姓名</th>
+						<th>借阅日期</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody id="list-table">
+					<!-- <tr>
+						
+						<td>
+							<span data="{{bookID}}" class="return btn btn-info">还书</span>
+						
+						</td>
+					
+						<td>
+							<span data="{{bor_id}}" class="renew btn btn-warning">续借</span>
+							<span data="{{bookID}}" class="return btn btn-success">还书</span>
+						</td>
+						
+					</tr> -->
+				</tbody>
+			</table>
+		</div>
+      </div>
+    </div>
+	</div>
+</div>
+
+
+<!-- 弹出框 -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">借書結果</h4>
+      </div>
+      <div class="modal-body">
+        <h4 class="modal-title" id="myModalLabel"></h4>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="quit" class="btn btn-default" data-dismiss="modal">确认</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{>footer}}
+</div>
+
+<script type="text/javascript">
+	function getHistory() {
+		// 获取显示类型 0 -> 未还记录  1 -> 已还记录
+		var type = $("#type").children(".btn-info").attr("data")
+		
+		if (type.length != 1) {
+			type = 0;
+		}
+		// 异步获取借书数据
+		$.ajax({
+			type: "post",
+			url : "/borrow/historyInfo",
+			data:{type:type},
+			success:function(data,status){
+				// console.log("get info ", data)
+				fillHistoryInfo(data)
+			},
+			error: function(error){
+				console.log("get info error " ,error)
+				alert(error)
+			}
+		})
+	}
+
+	function fillHistoryInfo(data){
+		if (0 == data.length) {
+			$("#list-table").html("无此书借阅记录")
+			return
+		}
+		var html = ""
+		for (var i = 0; i < data.length; i++) {
+			var lineColor = ""
+			if(data[i].status == 2){
+				lineColor = getTimeDuration(data[i].inDate)
+			}
+
+			else if (data[i].status == 0) {
+				lineColor = getTimeDuration(data[i].outDate)
+			}
+
+			html += `
+				<tr class=${lineColor}>
+					<td>${data[i].bookID}</td>
+					<td>${data[i].title}</td>
+					<td>${data[i].readerID}</td>
+					<td>${data[i].reader_name}</td>
+					<td>${data[i].outDate}</td>
+				`
+			// 续借一次
+			if(data[i].status == 2){
+				html += `<td>${data[i].inDate}续借 
+							<span data="${data[i].bookID}" class="return btn btn-success">还书</span>
+						</td>`
+			}
+			// 已还
+			else if (data[i].status == 1) {
+				html += `<td>${data[i].inDate}</td>`
+			}
+			// 未还
+			else{
+				html += `<td>
+							<span data="${data[i].bor_id}" class="renew btn btn-info">续借</span>
+							<span data="${data[i].bookID}" class="return btn btn-success">还书</span>
+						</td>`
+			}
+			html += "</tr>"
+		}
+
+		$("#list-table").html(html)
+	}
+
+
+	$(document).ready(function() {
+
+		getHistory()
+
+		// 切换数据类型
+		$("#type").on("click",function(event){
+			var $target = $(event.target)
+			// 若响应目标非父元素 或 当前已激活项
+			if ($target != $(this) && !$target.hasClass("btn-info")) {
+				$target.attr("class","col-sm-6 btn btn-info").siblings().attr("class","col-sm-6 btn btn-default")
+				getHistory()
+			}
+		})
+
+		$("#list-table").on("click",function(event){
+			var $target = $(event.target)
+			// 还书
+			if ($target.hasClass("return")) {
+				returnBook($target.attr("data"))
+			}
+			// 续借
+			else if($target.hasClass("renew")){
+				renewBook($target.attr("data"))
+			}
+		})
+	})
+
+	function returnBook(id){
+		console.log("in returnBook")
+		$.ajax({
+			type:"post",
+			url:"/borrow/return",
+			data:{id:id},
+			success:function(data,status){
+				showModal(data.msg)
+			},
+			error:function(error){
+				console.error("return book ajax error",error)
+				alert(error)
+			}
+		})
+	}
+
+	function renewBook(id){
+		$.ajax({
+			type:"post",
+			url:"/borrow/renew",
+			data:{id:id},
+			success:function(data,status){
+				showModal(data.msg)
+			},
+			error:function(error){
+				console.error("renew book error ",error)
+				alert(error)
+			}
+		})
+	}
+</script>

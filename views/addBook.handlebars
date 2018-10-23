@@ -1,0 +1,220 @@
+<div class="container">
+	<div class="panel panel-default">
+	  <div class="panel-heading clearfix">
+	    <h4 class="panel-title pull-left">
+	    	书目信息
+	    </h4>
+	    <a href="javascript:void(0);" id="book_id_without_used" class="btn btn-default pull-right">可选书籍编号</a>
+	  </div>
+	  <div class="panel-body">
+	  	<div class="col-xs-9">
+			<div class="row">
+				<h4 class="col-sm-2">ISBN:</h4>
+				<h4><input class="col-sm-8" id="isbn" placeholder="扫码输入ISBN" readonly><span id="manual-input" class="col-sm-2 btn btn-default" style="padding: 3px">手工输入</span></h4>
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">书名:</h4>
+				<p class="col-sm-10" id="book_title"></p>
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">副标题:</h4>
+				<p class="col-sm-10" id="sub_title"></p>
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">作者:</h4>
+				<p class="col-sm-10" id="author"></p>
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">出版社:</h4>
+				<p class="col-sm-10" id="publisher"></p>
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">出版时间:</h4>
+				<p class="col-sm-10" id="pubdate"></p>
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">内容简介: </h4>
+				<p class="col-sm-10" id="summary"></p>
+			</div>
+	  	</div>
+	  	<div class="col-xs-3">
+	  		<img id="cover_img" class="img-thumbnail" src="images/default.jpg">
+	  		<hr>
+	  		<div>
+	  			<input type="text" id="book_id" class="btn-block" placeholder="书号(3-5位),不填则系统生成">
+	  			<input type="text" hidden id="datafrom" value="0">
+	  			<p id="check_bookID"></p>
+	  		</div>
+	  		<hr>
+	  		<div>
+	  			<input type="button" class="btn btn-block btn-info"  id="submit" value="添加">
+	  		</div>
+	  	</div>
+
+	  </div>
+
+	</div>
+
+	<!-- 预约弹出框 -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h4 class="modal-title">添加结果</h4>
+	      </div>
+	      <div class="modal-body">
+	        <h4 class="modal-title" id="myModalLabel">添加成功</h4>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" id="quit" class="btn btn-primary">确认</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	{{>footer}}
+</div>
+
+<script type="text/javascript">
+	// 监听isbn输入变化 : 手输
+	$("#isbn").bind("input propertychange",function(event){
+		var isbn = $(this).val()
+		// console.log("isbn : ",isbn)
+		// isbn只有10位或13位
+		if (/^\d{10}$/.test(isbn)||/^\d{13}$/.test(isbn)) {
+			console.log("isbn cross")
+			getBookInfoBYISBN(isbn,"/insert/bookInfo",1)
+		}
+	})
+
+	// 监听book_id输入情况
+	$("#book_id").bind("input propertychange",function(event){
+		var target = $(this)
+		var id = target.val()
+		console.log("book_id : ",id)
+		
+		target.attr("class","")
+
+		// book_id存在且符合规则
+		if (/^[\d\.\w]{2,6}$/.test(id)) {
+			$.ajax({
+				type:'post',
+				url:'/insert/checkBookID',
+				data:{book_id:id},
+				dataType:"json",
+				success:function(data,status){
+					console.log(data)
+					// 该id已存在,不合法
+					if (data.exist) {
+						$("#check_bookID").html("该id已存在")
+						target.attr("class","btn-danger")
+					}
+					else{
+						$("#check_bookID").html("")
+						target.attr("class",'btn-success')
+					}
+				},
+				error:function(err){
+					console.log(" check book_id input , ajax error",err)
+				}
+			})
+		}
+	})
+
+	// 提交
+	$("#submit").on("click",function(event){
+		if (check()) {
+			var book_id = $("#book_id").val()
+
+			var data = {};
+			// 0->来自网络。1->来自数据库
+			if ($("#datafrom").val() == 0) {
+				data = getBookInfo()
+				data.from = 0
+			}else{
+				data.isbn = $("#isbn").val()
+				data.from = 1
+			}
+
+			data.book_id = book_id.length==0?null:book_id
+			console.log("data: ",data)
+			$.ajax({
+				type:"post",
+				url:'/insert',
+				data:data,
+				success:function(data,status){
+					console.log(data)
+					$("#datafrom").val(data.code)
+					showModal(data.msg)
+				},
+				error:function(err){
+					console.log(" ajax submit error",err)
+				}
+			})
+		}
+	})
+
+	// 检查是否可提交
+	function check(){
+		var book = $("#book_id")
+		var isbn = $("#isbn").val()
+		console.log(book.val(),book.length)
+		if((/^\d{10}$/.test(isbn)||/^\d{13}$/.test(isbn))&&(book.val().length == 0 || book.hasClass("btn-success")))
+			return true
+		return false
+	}
+
+	// 获取书籍数据
+	function getBookInfo(){
+		var info = {}
+		info.title = $("#book_title").html();
+		info.sub_title = $("#sub_title").html();
+		info.author = $("#author").html()
+		info.publisher = $("#publisher").html()
+		info.pubdate = $("#pubdate").html()
+		info.summary = $("#summary").html()
+		info.isbn = $("#isbn").val()
+		info.cover_img = info.isbn+".jpg"
+		return info
+	}
+
+
+
+	$("#book_id_without_used").click(function(){
+		$.ajax({
+			type:"post",
+			url:"/insert/bookIDList",
+			success:function(data,status){
+				console.log(data)
+				showModal(setCanUsedBookIDMsg(data))
+			},
+			error:function(err){
+				console.log("book_id_without_used err ", err)
+				alert(err)
+			}
+		})
+	})
+
+	// 
+	function setCanUsedBookIDMsg(data){
+		var start = 1,msg='';
+		for (var i = 0; i < data.length; i++) {
+			if(start < data[i].id){
+				msg += `<span class='btn btn-default' data='${start}'>${start} - ${data[i].id-1}</span>`
+			}
+			start = data[i].id+1
+		}
+		msg += `<span class='btn btn-default' data='${start}'> >= ${start}</span>`
+		return msg
+	}
+
+	// 自动填充最小的可用书号
+	$("#myModalLabel").on("click",function(event){
+		$target = $(event.target)
+		// 
+		if ($target.hasClass("btn-default")) {
+			var data = $target.attr("data")
+			$("#book_id").val(data)
+		}
+	})
+</script>

@@ -1,0 +1,171 @@
+<!-- 搜索结果页 -->
+<div class="container">
+<!-- 搜索结果页 -->
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title" id="total">共xx本</h4>
+  </div>
+  <div class="panel-body">
+  	<div class="row search-box">
+    
+      <div class="col-lg-1 col-lg-offset-2"></div>
+      <div class="col-lg-7">
+        <input id="isbn" type="text" class="col-*-12  form-control" placeholder="扫码输入ISBN" readonly>
+      </div>
+  	</div>
+    <hr>
+
+    <ul id="pagination" class="pagination pagination-lg">
+      <!--   <li data='-1'>&laquo;</li>
+        <li data='-1'>1</li>
+        <li data='-1'>2</li>
+        <li data='-1'>3</li>
+        <li data='-1'>4</li>
+        <li data='-1'>5</li>
+        <li data='-1'>&raquo;</li> -->
+    </ul>
+
+    <div id="book-list" class="row search-result">
+      <div class="inline_block flip-container">
+          <div class="flipper cleanfix" >
+            <a href="/borrow?isbn=123456789">
+                <div class="front">
+                  <img class="img-thumbnail" src="images/default.jpg" alt=""/>
+                </div>
+                <div class="back">
+                  <p>ISBN:</p>
+                  <p>书名</p>
+                  <p>作者</p>
+                  <p>
+                    出版社
+                    <strong class="pull-right">共2本</strong>
+                  </p>
+                </div>
+            </a>
+          </div>
+      </div> 
+     
+    </div>
+  </div>
+</div>
+{{>footer}}
+</div>
+<script type="text/javascript">
+    var pageData = {
+        page:0,
+        /* 一页60条数据 */
+        onePage:60,
+        total:undefined
+    }
+
+    $(document).ready(function(){
+        if (pageData.total == undefined) {
+            getTotalBooks()
+        }
+        getBookList(pageData.page)
+    })
+
+    // 获取图书总量
+    function getTotalBooks(){
+        $.ajax({
+            type:"post",
+            url:"/list/getTotal",
+            success:function(data,status){
+                console.log(data)
+                if (!data.total) {
+                    alert("获取图书数量失败")
+                }
+                pageData.total = data.total
+                $("#total").html(`共  ${pageData.total} 本`)
+            },
+            error:function(error){
+                console.log("getTotalBooks error ", error)
+                alert(error)
+            }
+        })
+    }
+
+    // 获取图书信息
+    function getBookList(page){
+        // console.log("in getBookList")
+        $.ajax({
+            type:"post",
+            url:"/list/getInfo",
+            data:{page:page},
+            success:function(data,status){
+                // 获取数据失败
+                if (data.err) {
+                    alert("获取书籍信息失败")
+                    return
+                }
+                // 填充图书数据
+                fillBookList(data)
+                // 设置分页
+                setPagination(page)
+            },
+            error:function(err){
+                console.log("ajax getBookList error")
+                alert(err)
+            }
+        })
+    }
+
+    function fillBookList(data,start){
+        html = ""
+        for (var i = 0; i < data.length; i++) {
+            html +=`<div class="inline_block flip-container">
+              <div class="flipper cleanfix" >
+                <a href="/borrow?isbn=${data[i].isbn}">
+                    <div class="front">
+                      <img class="img-thumbnail" src="images/${data[i].cover_img}" alt="${data[i].title}"/>
+                    </div>
+                    <div class="back">
+                      <p>ISBN:${data[i].isbn}</p>
+                      <p>${data[i].title}</p>
+                      <p>${data[i].author}</p>
+                      <p>
+                        ${data[i].publisher}
+                        <strong class="pull-right">共 ${data[i].totalNum} 本</strong>
+                      </p>
+                    </div>
+                </a>
+              </div>
+          </div>` 
+        }
+        $("#book-list").html(html)
+    }
+
+
+    /* 设置分页 */
+    function setPagination(page){
+        /* 尚未创建分页 */
+        console.log($("#pagination").children('li').length)
+        if (0 == $("#pagination").children('li').length) {
+            createPagination()
+            return
+        }
+        console.log("page : ",page)
+        pageData.page = page
+        ($("#pagination").children('li'))[page].attr("class","active").sublings(".active").attr("class","")
+    }
+
+    function createPagination(){
+        console.log("in createPagination")
+        if (pageData.total <= pageData.onePage) 
+            return
+        var num = Math.ceil(pageData.total / pageData.onePage)
+
+        var html = `<li data='-1'><a href="#">&laquo;</a></li>`
+        for (var i = 1; i <= num; i++) {
+            if (i == 1) {
+                html += `<li data='${i}' class='active'><a href="#">${i}</a></li>`    
+            }
+            else{
+                html += `<li data='${i}'><a href="#">${i}</a></li>`    
+            }
+        }
+        html += `<li data='-2'><a href="#">&raquo;</a></li>`
+        console.log(html)
+        $("#pagination").html(html)
+    }
+</script>

@@ -1,0 +1,61 @@
+<!-- body -->
+<div class='container'>
+  <!-- <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">预约</h4>
+    </div>
+    <div class="panel-body">
+      
+      <div class="row search-box">
+        <div class="col-lg-1 col-lg-offset-2">
+          <div id="dropdown1" class="dropdown">
+            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+              <span class="placeholder">图书名</span>
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li value="0"><a>图书名</a></li>
+              <li value="1"><a>预约人学号</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="input-group">
+            <input id="content" type="text" class="form-control">
+            <span class="input-group-btn">
+              <button id="submit_reserve" class="btn btn-default" type="button">GO！</button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {{#if Info}}
+        <div class="row search-result">
+          <div class="col-lg-8 col-lg-offset-2">
+            <ul class="list-group">
+              {{#each Info}}
+                <li class="list-group-item">
+                  <h4><a href="/books?isbn={{book_list}}"><b>{{title}}</b></a>
+                  <span class="pull-right">{{type}}</span>
+                  </h4>
+                  <p>
+                    预约时间： {{res_date}} &nbsp;&nbsp; 预约状态： {{status}}<br />  
+                    预约人： {{reader_id}}&nbsp;&nbsp;{{reader_name}}&nbsp;&nbsp; {{college_name}}
+                    {{#if can_cancel}}
+                      <span data="{{res_id}}" class="cancel pull-right btn btn-info">取消预约</span>
+                    {{/if}}
+                  </p>
+                </li>
+              {{/each}}
+            </ul>
+          </div>
+        </div>
+      {{else}}
+        <h4 class="info"> 无预约记录 </h4>   
+      {{/if}}
+    </div>
+  </div> -->
+
+  <h4>懒，不想写了</h4>
+  {{>footer}}
+</div>

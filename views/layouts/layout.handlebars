@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{title}}</title>
+
+ 	<link rel='stylesheet' href="stylesheets/bootstrap.min.css" />
+	<script src="/javascripts/jquery-3.3.1.min.js"></script>
+	<script src="/javascripts/public.js"></script>
+
+</head>
+<body>
+  <!-- 公共头部 -->
+	<nav class="navbar navbar-default navbar-static-top" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="/">图书流通管理系统</a>
+			</div>
+			<div id="navbar" class="navbar-collapse collapse">
+				{{#each arr}}
+				<ul class="nav navbar-nav">
+					<li class="{{borrow}}"><a href="/">图书借阅</a></li>
+					<li class="{{history}}"><a href="/history">借阅历史</a></li>
+					<li class="{{reserve}}"><a href="/reserve">预约情况</a></li>
+					<li class="{{lib}}"><a href="/list">书库</a></li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li class="{{new}}"><a href="/insert">新书入库</a></li>
+					<li class="{{imp}}"><a href="/insert">导入读者</a></li>
+				</ul>
+				{{/each}}
+			</div>
+		</div>
+	</nav>
+	<div class='container'>
+		{{#if success_msg}}
+		  <div class="alert alert-success">{{success_msg}}</div>
+		{{/if}}
+		{{#if error_msg}}
+		  <div class="alert alert-danger">{{error_msg}}</div>
+		{{/if}}
+	</div>
+
+  <!-- 内容部分 -->
+  {{{body}}}
+
+	<script src="/javascripts/bootstrap.min.js"></script>
+	<!-- <script src="/javascripts/search.js"></script> -->
+	<!-- <script src="/javascripts/mylib.js"></script> -->
+</body>
+</html>

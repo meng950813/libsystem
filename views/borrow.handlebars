@@ -1,0 +1,195 @@
+<div class="container">
+	<div class="panel panel-default">
+	  <div class="panel-heading">
+	    <h4 class="panel-title">书目信息</h4>
+	  </div>
+	  <div class="panel-body">
+	  	<div class="col-xs-9">
+			<div class="row">
+				<h4 class="col-sm-2">ISBN:</h4>
+				<h4><input class="col-sm-8" id="isbn" placeholder="扫码输入ISBN" readonly><span id="manual-input" class="col-sm-2 btn btn-default" style="padding: 3px">手工输入</span></h4>
+
+				<input type="hidden" id="isbn_by_query" value="{{isbn}}">
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">书名:</h4>
+				<p class="col-sm-10" id="book_title">待填充数据</p>
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">作者:</h4>
+				<p class="col-sm-10" id="author">待填充数据</p>
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">出版社:</h4>
+				<p class="col-sm-10" id="publisher">待填充数据</p>
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">出版时间:</h4>
+				<p class="col-sm-10" id="pubdate">待填充数据</p>
+			</div>
+			<div class="row">
+				<h4 class="col-sm-2">内容简介: </h4>
+				<p class="col-sm-10" id="summary">待填充数据</p>
+			</div>
+	  	</div>
+	  	<div class="col-xs-3">
+	  		<img id="cover_img" class="img-thumbnail" src="images/default.jpg">
+	  		<hr>
+	  		<div id="bookID_list">
+	  			<!-- <input type="button" name="book_id" class="btn btn-default" value="8004" disabled="true">
+	  			<input type="button" name="book_id" class="btn btn-default" value="8006"> -->
+	  		</div>
+	  		<hr>
+	  		<div class="inline">
+	  			<input type="text" name="reader_id" id="reader_id" placeholder="学号，形如：184627">
+	  			<p id="reader_name"></p>
+	  		</div>
+	  		<hr>
+	  		<div>
+	  			<input type="button" class="btn btn-block btn-info"  id="submit" value="确认">
+	  		</div>
+
+	  	</div>
+
+	  </div>
+
+	</div>
+
+	<!-- 预约弹出框 -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h4 class="modal-title">借書結果</h4>
+	      </div>
+	      <div class="modal-body">
+	        <h4 class="modal-title" id="myModalLabel"></h4>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" id="quit" class="btn btn-default" data-dismiss="modal">确认</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	{{>footer}}
+</div>
+
+<script type="text/javascript">
+
+	$(document).ready(function(){
+		var isbn = $("#isbn_by_query").val()
+		if (/^\d{10}|\d{13}$/.test(isbn)) {
+			$("#isbn").val(isbn)
+			getBookInfoBYISBN(isbn,"/borrow/bookInfo",2)
+		}
+	})
+
+
+	// 监听学号输入变化，
+	$("#reader_id").bind("input propertychange",function(event){
+		$(this).attr("class","")
+		var val = $(this).val()
+		// 6位学号
+		if (val.length == 6) {
+			$.ajax({
+				type:"post",
+				url:"/reader/getReader",
+				data:{reader_id:val},
+				dataType:"json",
+				success:function(data,status){
+					if (data.code == 1) {
+						// console.log(name)
+						$("#reader_name").html(data.msg);
+					}
+					else{
+						console.log(data,status)
+						console.log("ajax connect error status = "+status)
+					}
+				},
+				error:function(){
+					console.error("ajax error")
+				}
+			})
+
+		}
+	});
+
+	// 监听isbn输入变化
+	$("#isbn").bind("input propertychange",function(event){
+		var isbn = $(this).val()
+		console.log("isbn : ",isbn)
+		// isbn只有10位或13位
+		if (/^\d{10}|\d{13}$/.test(isbn)) {
+			getBookInfoBYISBN(isbn,"/borrow/bookInfo",2)
+		}
+	})
+
+
+	// 监听book_id 按钮
+	$("#bookID_list").on("click",function(event){
+		if ($(event.target).attr('id') != "bookID_list") {
+			$(event.target).attr("class","btn btn-info").siblings(".btn-info").attr("class","btn btn-default").parent().attr("class","")
+		}
+	})
+
+	// 监听提交按钮
+	$("#submit").on("click",function(event){
+		var canSubmit = check()
+		if (canSubmit) {
+			$.ajax({
+				type:'post',
+				url:'/borrow',
+				data:canSubmit,
+				dataType:"json",
+				success:function(data,status){
+					// 借书成功
+					if (1 == data.code) {
+						// 设置该书不可选
+						$("#bookID_list").children(".btn-info").attr("class","btn btn-default").attr("disabled","disabled")
+					}
+					showModal(data.msg)
+				},
+				error:function(){
+					console.error("submit error")
+				}
+			})
+		}
+	})
+
+	// 填充数据
+	function fillBookList(book_list){
+		
+		var html = ""
+		// console.log(book_list,book_list.length)
+		for (var i = 0; i < book_list.length; i++) {
+			// 该书可借
+			if (book_list[i].status == 1) {
+				html+="<input type='button' name='book_id' class='btn btn-default' value='"+book_list[i].book_id+"'>"	
+			}else{
+				html+="<input type='button' name='book_id' class='btn btn-default' value='"+book_list[i].book_id+"' disabled='true'>"	
+			}
+		}
+		$("#bookID_list").html(html)
+	}
+
+	//  检查是否可以提交申请
+	function check(){
+		var btn = $("#bookID_list").children(".btn-info")
+		if (btn.length == 0) {
+			$("#bookID_list").attr("class","btn-danger")
+			return false
+		}
+		name = $("#reader_name").html()
+		// 若人名为空 或为 “输入有误，查无此人”，则表示学号不正确
+		if (name.length == 0 || name.length >= 9) {
+			$("#reader_id").attr("class","btn-danger")
+			return false
+		}
+		var data = {}
+		data.book_id = btn.val()
+		data.readerId = $("#reader_id").val()
+
+		return data
+	}
+</script>

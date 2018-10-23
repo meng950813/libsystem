@@ -1,0 +1,10 @@
+node_modules
+
+public/images
+
+# Ignore Mac OS desktop services store
+.DS_Store
+
+# Ignore Windows desktop setting file
+desktop.ini
+

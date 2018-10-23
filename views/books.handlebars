@@ -1,0 +1,107 @@
+<div class="container">
+	<div class="panel panel-default">
+	  <div class="panel-heading">
+	    <h4 class="panel-title">书目信息</h4>
+	  </div>
+	  <div class="panel-body">
+	  	<div class="row" style="margin:10px;">
+	  		{{#if bookInfo}}
+				<dl class="booklist clearfix">
+					<dt>书名:</dt>
+					<dd>{{bookInfo.title}}</dd>
+				</dl>
+				<dl class="booklist clearfix">
+					<dt>作者:</dt>
+					<dd>{{bookInfo.author}}</dd>
+				</dl>
+				<dl class="booklist clearfix">
+				<dt>出版社:</dt>
+				<dd>{{bookInfo.press}}</dd>
+				</dl>
+				
+			{{/if}}
+	  	</div>
+	  	<div class="row" style="margin:10px;">
+	  		<div class="bs-example bs-example-tabs">
+			    <ul class="nav nav-tabs" role="tablist">
+			      <li role="presentation" class="active">
+			      	<a href="#home" id="home-tab" role="tab" data-toggle="tab">馆藏信息</a>
+			      </li>
+			      <li role="presentation">
+			      	<a href="#profile" role="tab" data-toggle="tab">预约申请</a>
+			      </li>
+			    </ul>
+			    <div class="tab-content">
+			      <div role="tabpanel" class="tab-pane fade active in" id="home" aria-labelledby="home-tab">
+          		<table class="table">
+          			<thead>
+          				<tr>
+          					<th>索书号</th>
+          					<th>书名</th>
+          					<th>书刊状态</th>
+          					<th>执行借阅</th>
+          				</tr>
+          			</thead>
+          			<tbody>
+          				{{#each booksState}}
+          				<tr>
+	        	          <td>{{isbn}}</td>
+	        	          <td>{{title}}</td>
+	        	          <td>{{state}}</td>
+	        	          <td>{{{isBorrow}}}</td>
+	        	        </tr>
+	        	        {{/each}}
+          			</tbody>
+          		</table>
+			      </div>
+			      <div role="tabpanel" class="tab-pane fade" id="profile" aria-labelledby="profile-tab">
+			        <table class="table">
+          			<thead>
+          				<tr>
+          					<th>索书号</th>
+          					<th>书名</th>
+          					<th>是否可预约</th>
+          				</tr>
+          			</thead>
+          			<tbody>
+          				<tr>
+          					{{#if bookInfo}}
+		        	          <td>{{bookInfo.isbn}}</td>
+		        	          <td>{{bookInfo.title}}</td>
+		        	          <td>{{{isOrder}}}</td>
+		        	        {{/if}}
+        	        	</tr>
+          			</tbody>
+          		</table>
+			      </div>
+			    </div>
+			  </div>
+	  	</div>
+	  </div>
+	</div>
+
+	<!-- 预约弹出框 -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+	        <h4 class="modal-title" id="myModalLabel">确认预约此书？</h4>
+	      </div>
+	      <div class="modal-body">
+	      {{#if bookInfo}}
+	      <div>{{bookInfo.callnumber}}</div>
+	      <div>{{bookInfo.title}}</div>
+				<div>{{bookInfo.author}}</div>
+	      {{/if}}
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+	        <button type="button" class="btn btn-primary">确认</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	{{>footer}}
+</div>
