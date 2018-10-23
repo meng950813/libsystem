@@ -2,6 +2,8 @@ node_modules
 
 public/images
 
+config.js
+
 # Ignore Mac OS desktop services store
 .DS_Store
 
