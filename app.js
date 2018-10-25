@@ -17,7 +17,6 @@ var borrow=require('./routes/borrow');
 var list=require('./routes/bookList');
 var reader=require('./routes/reader');
 
-// var helpers=require('./helpers/helpers');
 
 var app = express();
 
@@ -25,7 +24,6 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.engine('handlebars', exphbs({
   defaultLayout:'layout',
-  // helpers:helpers,//设置helper
   partialsDir:[//设置partialsdir
     'views/partials/'
   ]
@@ -100,3 +98,4 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
+   

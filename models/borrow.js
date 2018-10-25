@@ -52,7 +52,10 @@ Borrow.findHistoryByType=function(type,callback){
 }
 
 Borrow.findHistoryByISBN=function(isbn,callback){
-	var sql = "SELECT borrow_history.*,reader_name,book_info.isbn,title from borrow_history,reader,book_info,book_list WHERE bookID=book_id and book_info.isbn=book_list.ISBN and readerID=reader_id and borrow_history.status='0' and book_list.ISBN=?";
+	var sql = `SELECT borrow_history.*,reader_name,book_info.isbn,title 
+				from borrow_history,reader,book_info,book_list 
+				WHERE bookID=book_id and book_info.isbn=book_list.ISBN and readerID=reader_id 
+				and borrow_history.status != '1' and book_list.ISBN=?`;
 	db.exec(sql,[isbn],function(err,rows){
 		if (err) {
 			console.log("borrow.js findHistoryByISBN : ",err)
