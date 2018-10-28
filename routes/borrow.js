@@ -94,13 +94,22 @@ router.post("/renew",function(req,res){
 
 // 获取数据
 router.post("/historyInfo",function(req,res){
-	// 类型： 0:未还;  1： 已还; 2: 续借一次; 3：遗失
+	/*
+		类型： 0:未还;  1： 已还; 2: 续借一次; 3：遗失
+		默认 : 0
+	*/
 	var parm = req.body.type;
 	var fun = Borrow.findHistoryByType;
 	// 若有isbn传入 ： 表示以isbn查找
 	if (req.body.isbn) {
 		parm = req.body.isbn;
-		fun = Borrow.findHistoryByISBN;
+		// 若长度小于10  ==> 传入book_id
+		if (parm.toString().length < 10) {
+			fun = Borrow.findHistoryByBookID
+		}
+		else{
+			fun = Borrow.findHistoryByISBN;
+		}
 	}
 
 	fun(parm,function(err,info){

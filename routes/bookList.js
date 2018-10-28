@@ -7,7 +7,7 @@ var Book=require('../models/book');
 
 // 获取取书图书信息
 router.post("/getInfo",function(req,res){
-	var parm = req.body.page * 60
+	var parm = (req.body.page-1) * 60
 	// 找所有书
 	var fun = Book.findAllBooks;
 
@@ -35,8 +35,8 @@ router.post("/getTotal",function(req,res){
 			console.log("in bookList.js getTotal: ", err)
 			res.send({total:null})
 		}
-		// console.log("getTotal",row)
-		res.send(row[0])
+		console.log("getTotal",row)
+		res.send({total:row.total,typeTotal:row.typeTotal})
 	})
 })
 

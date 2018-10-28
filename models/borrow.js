@@ -65,6 +65,21 @@ Borrow.findHistoryByISBN=function(isbn,callback){
 	})
 }
 
+
+Borrow.findHistoryByBookID=function(book_id,callback){
+	var sql = `SELECT borrow_history.*,reader_name,book_info.isbn,title 
+				from borrow_history,reader,book_info,book_list 
+				WHERE bookID=book_id and book_info.isbn=book_list.ISBN and readerID=reader_id 
+				and borrow_history.status != '1' and bookID=?`;
+	db.exec(sql,[book_id],function(err,rows){
+		if (err) {
+			console.log("borrow.js findHistoryByBookID : ",err)
+			return callback(err)
+		}
+		return callback(err,rows)
+	})
+}
+
 //还书
 Borrow.returnBook=function(book_id,callback){
 	// 参数： book_id,time

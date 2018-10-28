@@ -11,7 +11,7 @@
 	        <div class="col-lg-1 col-lg-offset-2"></div>
 	        <div class="col-lg-7">
 	          <div class="input-group">
-	            <input id="isbn" type="text" class="form-control" placeholder="扫码输入ISBN" readonly>
+	            <input id="isbn" type="text" class="form-control" placeholder="扫码输入ISBN / 4位图书编号，如：0101" readonly>
 	            <span class="input-group-btn">
 	              <button id="manual-input" class="btn btn-default" type="button">手工输入</button>
 	            </span>
@@ -103,6 +103,19 @@
 		})
 	}
 
+	// 监听isbn输入变化 : 手输
+	$("#isbn").bind("input propertychange",function(event){
+		var isbn = $(this).val()
+
+		// console.log("isbn : ",isbn)
+		// isbn只有10位或13位，book_id 4位
+		if (/^\d{4}$/.test(isbn) || /^\d{10}$/.test(isbn)||/^\d{13}$/.test(isbn)) {
+			console.log("isbn cross")
+			getBookInfoBYISBN(isbn,"/borrow/historyInfo",3)
+		}
+	})
+
+
 	function fillHistoryInfo(data){
 		if (0 == data.length) {
 			$("#list-table").html("无此书借阅记录")
@@ -179,7 +192,7 @@
 	})
 
 	function returnBook(id){
-		console.log("in returnBook")
+		// console.log("in returnBook")
 		$.ajax({
 			type:"post",
 			url:"/borrow/return",
