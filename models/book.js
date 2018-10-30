@@ -86,7 +86,17 @@ Book.getTotal = function(callback){
 			console.log("book.js getTotal : ",err)
 			return callback(err)
 		}
-		return callback(err,row)
+		// console.log(row,row[0])
+		sql = "SELECT count(*) as typeTotal from book_info"
+		db.exec(sql,[],function(err,rows){
+			if (err) {
+				console.log("book.js getTotal : ",err)
+				return callback(err)
+			}
+			var back = {total:row[0].total,typeTotal:rows[0].typeTotal}
+
+			return callback(err,back)
+		})
 	})
 }
 

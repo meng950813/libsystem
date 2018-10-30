@@ -17,12 +17,9 @@
 
     <ul id="pagination" class="pagination pagination-lg">
       <!--   <li data='-1'>&laquo;</li>
-        <li data='-1'>1</li>
-        <li data='-1'>2</li>
-        <li data='-1'>3</li>
-        <li data='-1'>4</li>
-        <li data='-1'>5</li>
-        <li data='-1'>&raquo;</li> -->
+        <li data='1'>1</li>
+        <li data='2'>2</li>
+        <li data='-2'>&raquo;</li> -->
     </ul>
 
     <div id="book-list" class="row search-result">
@@ -52,9 +49,13 @@
 </div>
 <script type="text/javascript">
     var pageData = {
-        page:0,
+        /* 当前页号 */
+        page:1,
         /* 一页60条数据 */
         onePage:60,
+        // 不同isbn书的总量
+        typeTotal:undefined,
+        // 全部书的总数量
         total:undefined
     }
 
@@ -71,12 +72,14 @@
             type:"post",
             url:"/list/getTotal",
             success:function(data,status){
-                console.log(data)
+                // console.log(data)
                 if (!data.total) {
                     alert("获取图书数量失败")
                 }
+                pageData.typeTotal = data.typeTotal
                 pageData.total = data.total
-                $("#total").html(`共  ${pageData.total} 本`)
+
+                $("#total").html(`共  ${pageData.typeTotal} 部，${pageData.total}本`)
             },
             error:function(error){
                 console.log("getTotalBooks error ", error)
@@ -87,7 +90,7 @@
 
     // 获取图书信息
     function getBookList(page){
-        // console.log("in getBookList")
+        // console.log("in getBookList ",page)
         $.ajax({
             type:"post",
             url:"/list/getInfo",
@@ -139,21 +142,23 @@
     /* 设置分页 */
     function setPagination(page){
         /* 尚未创建分页 */
-        console.log($("#pagination").children('li').length)
+        // console.log($("#pagination").children('li').length)
         if (0 == $("#pagination").children('li').length) {
             createPagination()
             return
         }
-        console.log("page : ",page)
-        pageData.page = page
-        ($("#pagination").children('li'))[page].attr("class","active").sublings(".active").attr("class","")
+        // console.log("page : ",page)
+        pageData.page = page;
+        var $target = $($("#pagination").children('li')[page])
+
+        $target.attr("class","active").siblings(".active").attr("class","")
     }
 
     function createPagination(){
-        console.log("in createPagination")
-        if (pageData.total <= pageData.onePage) 
+        if (!pageData.typeTotal || pageData.typeTotal <= pageData.onePage) 
             return
-        var num = Math.ceil(pageData.total / pageData.onePage)
+        // console.log("in createPagination")
+        var num = Math.ceil(pageData.typeTotal / pageData.onePage)
 
         var html = `<li data='-1'><a href="#">&laquo;</a></li>`
         for (var i = 1; i <= num; i++) {
@@ -164,8 +169,36 @@
                 html += `<li data='${i}'><a href="#">${i}</a></li>`    
             }
         }
-        html += `<li data='-2'><a href="#">&raquo;</a></li>`
-        console.log(html)
+        html += `<li data='-2'><a  href="#">&raquo;</a></li>`
+        // console.log(html)
         $("#pagination").html(html)
     }
+
+    $("#pagination").on("click",function(event){
+        $target = $(event.target).parent()
+        if(!$target.hasClass('active')) {
+            var nowPage = parseInt($(this).children(".active").attr("data"))
+            var newPage = $target.attr("data")
+            // 前一页
+            if (newPage == -1) {
+                if (nowPage > 1) {
+                    newPage = nowPage-1
+                }
+                else{
+                    return
+                }
+            }
+            // 后一页
+            else if (newPage == -2) {
+                // 未到最后一页
+                if (nowPage * pageData.onePage < pageData.typeTotal) {
+                    newPage = nowPage + 1
+                }
+                else{
+                    return
+                }
+            }
+            getBookList(newPage)
+        }
+    })
 </script>

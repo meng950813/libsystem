@@ -4,6 +4,11 @@ var router = express.Router();
 var Reader=require('../models/reader');
 
 
+router.post("/insert",function(req,res){
+	
+})
+
+
 router.post("/getReader",function(req,res){
 	// console.log("in getReader")
 	var readerId = req.body.reader_id

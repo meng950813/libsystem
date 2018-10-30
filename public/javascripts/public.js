@@ -1,7 +1,8 @@
 // 手工操作
 $(document).ready(function() {
 	$("#manual-input").click(function(){
-		$("#isbn").removeAttr("readonly")
+		$("input").removeAttr("readonly")
+		$("textarea").removeAttr("readonly")
 	})
 })
 
@@ -194,12 +195,12 @@ function getTimeDuration(time){
 	var last = (new Date(time)).getTime()
 	var diff = now - last
 	// 大于两周 
-	if (diff > 3 * 7 * 24 * 60 * 60 * 1000){
+	if (diff > 2 * 7 * 24 * 60 * 60 * 1000){
 
 		return "btn-danger"
 	}
 	// 还书期限前三天
-	else if(diff > 11 * 24 * 60 * 60 * 1000)
+	else if(diff > 3 * 24 * 60 * 60 * 1000)
 		return 'btn-warning'
 	else
 		return ''
