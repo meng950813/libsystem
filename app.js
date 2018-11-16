@@ -7,6 +7,8 @@ var bodyParser = require('body-parser');
 var exphbs = require('express-handlebars');
 var flash = require('connect-flash');
 
+
+
 var session = require('express-session');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
@@ -17,6 +19,7 @@ var borrow=require('./routes/borrow');
 var list=require('./routes/bookList');
 var reader=require('./routes/reader');
 
+var sendmail = require("./routes/sendEmail")
 
 var app = express();
 
@@ -98,4 +101,38 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
-   
+
+// 定时器插件，引入定时任务
+var schedule = require('node-schedule');
+
+(function(){
+  /*
+  * * * * * *
+  ┬ ┬ ┬ ┬ ┬ ┬
+  │ │ │ │ │ |
+  │ │ │ │ │ └ day of week (0 - 7) (0 or 7 is Sun)
+  │ │ │ │ └───── month (1 - 12)
+  │ │ │ └────────── day of month (1 - 31)
+  │ │ └─────────────── hour (0 - 23)
+  │ └──────────────────── minute (0 - 59)
+  └───────────────────────── second (0 - 59, OPTIONAL)
+
+  每分钟的第30秒触发： '30 * * * * *'
+
+  每小时的1分30秒触发 ：'30 1 * * * *'
+
+  每天的凌晨1点1分30秒触发 ：'30 1 1 * * *'
+
+  每月的1日1点1分30秒触发 ：'30 1 1 1 * *'
+
+  2016年的1月1日1点1分30秒触发 ：'30 1 1 1 2016 *'
+
+  每周1的1点1分30秒触发 ：'30 1 1 * * 1'
+  */
+
+  // 设置为每天 凌晨 3 点执行
+  schedule.scheduleJob('0 0 3 * * *', function(){
+    // 检查需要给哪些人发邮件
+    sendmail.checkout()
+  }); 
+}())

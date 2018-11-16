@@ -1,5 +1,5 @@
 var mysql = require('mysql');
-var config=require('../config');
+var config=require('../config').DB;
 
 var option = {
 	host: config.db_host,
