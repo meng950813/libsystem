@@ -129,8 +129,9 @@ function addBook(data){
 	}
 	else{
 		fillBookInfo(data.info)
-		$("#datafrom").val(data.from)
 	}
+	console.log("set from to ", data.from)
+	$("#datafrom").val(data.from)
 }
 
 function borrowBook(data){
@@ -157,22 +158,44 @@ function showModal(msg){
 /* 填充书籍信息 */
 function fillBookInfo(book_info){
 	console.log("fillBookInfo")
-	$("#book_title").html(book_info.title);
+	// page of borrow
+	if ($("#isbn_by_query").length) {
+		$("#book_title").html(book_info.title);
 
-	if (book_info.subtitle.length > 0) {
-		$("#sub_title").html(book_info.subtitle);
+		if (book_info.subtitle.length > 0) {
+			$("#sub_title").html(book_info.subtitle);
+		}
+		else{
+			$("#sub_title").hide()
+		}
+
+		$("#author").html(book_info.author)
+		$("#publisher").html(book_info.publisher)
+		$("#pubdate").html(book_info.pubdate)
+		if (book_info.summary && book_info.summary.length != 0) {
+			book_info.summary = book_info.summary.replace(/\\n/,"<br>")
+		}
+		$("#summary").html(book_info.summary)
 	}
+	// page of insert book
 	else{
-		$("#sub_title").hide()
-	}
+		$("#book_title").val(book_info.title);
 
-	$("#author").html(book_info.author)
-	$("#publisher").html(book_info.publisher)
-	$("#pubdate").html(book_info.pubdate)
-	if (book_info.summary && book_info.summary.length != 0) {
-		book_info.summary = book_info.summary.replace(/\\n/,"<br>")
+		if (book_info.subtitle.length > 0) {
+			$("#sub_title").val(book_info.subtitle);
+		}
+		else{
+			$("#sub_title").hide()
+		}
+
+		$("#author").val(book_info.author)
+		$("#publisher").val(book_info.publisher)
+		$("#pubdate").val(book_info.pubdate)
+		if (book_info.summary && book_info.summary.length != 0) {
+			book_info.summary = book_info.summary.replace(/\\n/,"<br>")
+		}
+		$("#summary").val(book_info.summary)
 	}
-	$("#summary").html(book_info.summary)
 	// console.log(book_info,book_info.author,book_info['cover_img'])
 	setTimeout(function(){
 		$("#cover_img").attr('src',"images/"+book_info.cover_img)	
@@ -200,7 +223,7 @@ function getTimeDuration(time){
 		return "btn-danger"
 	}
 	// 还书期限前三天
-	else if(diff > 3 * 24 * 60 * 60 * 1000)
+	else if(diff > 11 * 24 * 60 * 60 * 1000)
 		return 'btn-warning'
 	else
 		return ''

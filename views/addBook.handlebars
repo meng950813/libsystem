@@ -127,8 +127,9 @@
 			var book_id = $("#book_id").val()
 
 			var data = {};
+			console.log($("#datafrom").val())
 			// 0->来自网络。1->来自数据库
-			if ($("#datafrom").val() == 0) {
+			if ($("#datafrom").val() != 1) {
 				data = getBookInfo()
 				data.from = 0
 			}else{
@@ -167,12 +168,12 @@
 	// 获取书籍数据
 	function getBookInfo(){
 		var info = {}
-		info.title = $("#book_title").html();
-		info.sub_title = $("#sub_title").html();
-		info.author = $("#author").html()
-		info.publisher = $("#publisher").html()
-		info.pubdate = $("#pubdate").html()
-		info.summary = $("#summary").html()
+		info.title = $("#book_title").val();
+		info.sub_title = $("#sub_title").val();
+		info.author = $("#author").val()
+		info.publisher = $("#publisher").val()
+		info.pubdate = $("#pubdate").val()
+		info.summary = $("#summary").val()
 		info.isbn = $("#isbn").val()
 		info.cover_img = info.isbn+".jpg"
 		return info
@@ -214,7 +215,7 @@
 		// 
 		if ($target.hasClass("btn-default")) {
 			var data = $target.attr("data")
-			$("#book_id").val(data)
+			$("#book_id").attr("class","btn-success").val(data)
 		}
 	})
 </script>
