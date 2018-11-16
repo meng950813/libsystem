@@ -206,10 +206,16 @@ function fillBookInfo(book_info){
 
 	给定一个时间戳，计算 当前时间 的时长，以天为单位
 	返回显示颜色的 类名： 
-		时长 > 14  		==>		btn-danger (red);
-		14 > 时长 > 11  	==>		btn-warning (yellow):
+		超过还书时间  	==>		btn-danger (red);
+		还书期限前三天  	==>		btn-warning (yellow):
 		return 			==> 	""
 */
+
+// 还书期限： 三周
+var deadline = 3 * 7 * 24 * 60 * 60 * 1000;
+// 警告期限： 3天
+var waringline = 3 * 24 * 60 * 60 * 1000;
+
 function getTimeDuration(time){
 	if (!time) {
 		return ""
@@ -217,13 +223,17 @@ function getTimeDuration(time){
 	var now = (new Date()).getTime()
 	var last = (new Date(time)).getTime()
 	var diff = now - last
-	// 大于两周 
-	if (diff > 2 * 7 * 24 * 60 * 60 * 1000){
+	// 大于三周 
+	if (diff > deadline){
 
 		return "btn-danger"
 	}
 	// 还书期限前三天
+<<<<<<< HEAD
 	else if(diff > 11 * 24 * 60 * 60 * 1000)
+=======
+	else if(diff > waringline)
+>>>>>>> origin/master
 		return 'btn-warning'
 	else
 		return ''
