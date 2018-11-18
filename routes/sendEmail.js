@@ -20,7 +20,8 @@ var MailSender = {
         发送者信息
     */
     transporter : nodemailer.createTransport({
-        service: '163',
+        host: 'smtp.exmail.qq.com',
+        secure: true,
         port: 465,
         auth: {
             user: EMAIL.SENDER,
@@ -36,9 +37,9 @@ var MailSender = {
     */
     mailOptions : {
         from: EMAIL.SENDER, // sender address
-        to: 'i2lmeng@163.com', // list of receivers
+        to: '1752397568@qq.com', // list of receivers
         subject: '东大软院（苏州）图书馆还书期限提醒', // Subject line
-        text: 'Hello world ✔', // plaintext body
+        text: '东大软院（苏州）图书馆还书期限提醒', // plaintext body
         html: '<b>Hello world ✔</b>' // html body
     }
 
@@ -48,21 +49,26 @@ var MailSender = {
     info : {email,msg}
     name : 用户名
 */ 
-    MailSender.sendMail = function(){
+    MailSender.sendMail = function(info,name){
 
-        this.transporter.sendMail(this.mailOptions, function(error, info){
+        // 配置发送内容 : 
+        if(!this.setReceiver(info,name))
+            return
+
+        // console.log("sendMail")
+        // console.log(this.mailOptions.html)
+        
+        this.transporter.sendMail(this.mailOptions, function(error, back_info){
             if(error){
                 console.log(error);
 
                 this.errorMsg += `
-                    于${fmtDate(new Date().getTime())} 发送给${name}的邮件失败;内容 ：${info}
+                    于${fmtDate(new Date().getTime())} 发送给${name}的邮件失败;内容 ：${back_info}
                     错误信息如下 ： ${error}<br><br>
                 `
             }else{
-                console.log('Message sent: ' + info.response);
+                console.log(`Message sent to ${name} : ` + back_info.response);
                 
-                // 每次发送完成之后间隔 10s，防止被封
-                setTimeout(function(){},10000)
             }
         }.bind(this));
 
@@ -77,14 +83,14 @@ var MailSender = {
     name : 用户名
 */ 
 MailSender.setReceiver = function(info,name){
-    console.log(info)
+    // console.log(info)
 
     if (!info.email) {
         return false;
     }
 
     this.mailOptions.to = info.email;
-    
+    // console.log(`this is ${name}'s email : `,info.email)
     // this.mailOptions.to = "i2lmeng@163.com"
 
     text = `
@@ -93,23 +99,30 @@ MailSender.setReceiver = function(info,name){
         ${info.msg}
 
         请尽快到三江院二楼图书馆 还书/续借。
-        <br>
-        <i>注：每次借书周期为3周，可续借一次</i><br>
-        <b>另：不要回复！不要回复！不要回复！</b><br>
+        <br><br>
+        <i>注：每次借书周期为3周，可续借一次</i><br><br>
+        <b>另：不要回复！不要回复！不要回复！</b><br><br>
         
         <p style="text-align:right"> <b>谢谢!</b></p>
 
     `;
 
-    // this.mailOptions.text = text;
     this.mailOptions.html = text;
+
+    return true;
+}
+
+function sleepSync(ms) {
+    return new Promise(done => {
+        setTimeout(done, ms)
+    })
 }
 
 
 /* 获取需要发送邮件的人的信息 */
 MailSender.checkout = function() {
 
-    CheckTimeout.check(function(err,rows){
+    CheckTimeout.check(async function(err,rows){
         if (err) {
             console.log("check recode out deadline have something wrong！", err)
             return;
@@ -121,32 +134,39 @@ MailSender.checkout = function() {
 
         // 合并同一人的信息,键值对
         var data = this.mergeReader(rows)
+        Object.keys(data).length
 
-        // 凌晨 3 点 检查出结果，目标早上9点发送邮件 ==> 延迟6小时
-        setTimeout(function(){
-            for (var name in data) {
+        var count = -1;
+        for(var name in data) {
+            // count += 1;
 
-                // 配置发送内容 : 
-                if (this.setReceiver(data[name],name)){
-                    // 发送邮件
-                    this.sendMail();
-                }
-            }
+            // 发送邮件
+            // (function(info,name){
 
-            /** 有发送失败的消息 */
-            if (this.errorMsg.length > 10) {
-                this.mailOptions.to = EMAIL.MANAGER_MAIL;
-                this.mailOptions.text = this.errorMsg;
-                
-                this.sendMail()
+            //     setTimeout(function(){
+            //         // console.log(name)
+            //         // console.log(info.email)
+            //         this.sendMail(info,name)
+            //     // 每10s发一封邮件
+            //     }.bind(this),10000 * count)
 
-                /**
-                    TODO ： 若发给管理员的邮件也失败了。。。。
-                */
-                this.errorMsg = "";
-            }
+            // }.bind(this)(data[name],name));
+            this.sendMail(info, name)
+            await sleepSync(1000)
+        }
 
-        }.bind(this),TIME.ONEDAY/4);
+        /** 有发送失败的消息 */
+        if (this.errorMsg.length > 10) {
+            this.mailOptions.to = EMAIL.MANAGER_MAIL;
+            this.mailOptions.text = this.errorMsg;
+            
+            this.sendMail()
+
+            /**
+                TODO ： 若发给管理员的邮件也失败了。。。。
+            */
+            this.errorMsg = "";
+        }
 
     }.bind(this))
 };
@@ -164,6 +184,7 @@ MailSender.mergeReader = function(info_list){
     for(i in info_list){
         // 有续借时间以续借时间为准, 否则以出借时间为准
         time = info_list[i].inDate == null?info_list[i].outDate:info_list[i].inDate;
+
         name = info_list[i].reader_name;
 
         // 数组中没有
@@ -188,11 +209,11 @@ MailSender.mergeReader = function(info_list){
 MailSender.setMsg = function(book_title,time) {
     // 计算借书最长期限(3周) 与已借时长的 时间差，单位 天 向下取整
     var diff = TIME.DEADLINE - Math.floor((new Date().getTime() - time)/TIME.ONEDAY);
-    
+
     time = fmtDate(time);
 
     var msg = `于 ${time} (续)借的 《${book_title}》 `;
-    if(diff >= 0){
+    if(diff >=0 && diff <= 3){
         msg += `<span style='color:yellow'>还有 <strong> ${diff} 天</strong>到期 </span><br><br>`;
     }
     else{

@@ -131,7 +131,10 @@ var schedule = require('node-schedule');
   */
 
   // 设置为每天 凌晨 3 点执行
-  schedule.scheduleJob('0 0 3 * * *', function(){
+  schedule.scheduleJob('0 0 10 * * *', function(){
+
+    console.log("checkout send email")
+
     // 检查需要给哪些人发邮件
     sendmail.checkout()
   }); 

@@ -1,8 +1,6 @@
 var express = require('express');
 var router = express.Router();
 
-var MailSender=require('./sendemail');
-
 //跳转借书页
 router.get('/',function(req,res){
 	// res.redirect('/index');
@@ -17,7 +15,6 @@ router.get('/index',function(req,res){
 
 //进入借书页面
 router.get('/borrow',function(req,res,next){
-	MailSender.checkout()
 	var isbn = req.query.isbn
 	// 若无isbn传入
 	if(!isbn) {
