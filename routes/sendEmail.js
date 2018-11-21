@@ -136,7 +136,7 @@ MailSender.checkout = function() {
         var data = this.mergeReader(rows)
         Object.keys(data).length
 
-        var count = -1;
+        // var count = -1;
         for(var name in data) {
             // count += 1;
 
@@ -151,16 +151,16 @@ MailSender.checkout = function() {
             //     }.bind(this),10000 * count)
 
             // }.bind(this)(data[name],name));
-            this.sendMail(info, name)
+            this.sendMail(data[name], name)
             await sleepSync(1000)
         }
 
         /** 有发送失败的消息 */
         if (this.errorMsg.length > 10) {
-            this.mailOptions.to = EMAIL.MANAGER_MAIL;
-            this.mailOptions.text = this.errorMsg;
+            // this.mailOptions.to = EMAIL.MANAGER_MAIL;
+            // var errorMsg = this.errorMsg;
             
-            this.sendMail()
+            this.sendMail({email:EMAIL.MANAGER_MAIL,msg:errorMsg},"管理员")
 
             /**
                 TODO ： 若发给管理员的邮件也失败了。。。。
