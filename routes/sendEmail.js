@@ -1,5 +1,7 @@
 var nodemailer = require('nodemailer');
 
+var fs = require("fs")
+
 var config = require("../config.js")
 
 var TIME = config.TIME
@@ -9,12 +11,6 @@ var CheckTimeout = require("../models/checkTimeout")
 
 //邮件发送类
 var MailSender = {
-
-    /**
-        记录发送失败的邮件信息，待所有邮件发送完成后，
-        将该信息发送给 管理员
-    */
-    errorMsg: "",
 
     /**
         发送者信息
@@ -33,7 +29,7 @@ var MailSender = {
     }),
 
     /**
-        发送信息
+        邮件头部信息，包括 发送者邮箱，接收者邮箱，主题，内容
     */
     mailOptions : {
         from: EMAIL.SENDER, // sender address
@@ -49,31 +45,32 @@ var MailSender = {
     info : {email,msg}
     name : 用户名
 */ 
-    MailSender.sendMail = function(info,name){
+MailSender.sendMail = function(info,name){
 
-        // 配置发送内容 : 
-        if(!this.setReceiver(info,name))
-            return
-
-        // console.log("sendMail")
-        // console.log(this.mailOptions.html)
-        
-        this.transporter.sendMail(this.mailOptions, function(error, back_info){
-            if(error){
-                console.log(error);
-
-                this.errorMsg += `
-                    于${fmtDate(new Date().getTime())} 发送给${name}的邮件失败;内容 ：${back_info}
-                    错误信息如下 ： ${error}<br><br>
-                `
-            }else{
-                console.log(`Message sent to ${name} : ` + back_info.response);
-                
-            }
-        }.bind(this));
-
+    // 配置 接收者及接收内容 ，若无 返回 false
+    if(!this.setReceiver(info,name)){
+        return;
     }
 
+    // 发送邮件
+    this.transporter.sendMail(this.mailOptions, function(error, back_info){
+
+        var mailStatus = fmtDate();
+        
+        if(error){
+            console.log(error);
+            mailStatus = `Failed     ${mailStatus}    ${name}    ${info.msg}\r\n`;
+        }else{
+            console.log(`Message sent to ${name} : ` + back_info.response);
+            
+            mailStatus = `Success    ${mailStatus}    ${name}    ${info.msg}\r\n`;
+        }
+
+        writeSendLog(mailStatus)
+
+    }.bind(this));
+
+}
 
 
 /**
@@ -90,8 +87,6 @@ MailSender.setReceiver = function(info,name){
     }
 
     this.mailOptions.to = info.email;
-    // console.log(`this is ${name}'s email : `,info.email)
-    // this.mailOptions.to = "i2lmeng@163.com"
 
     text = `
         ${name} 同学：
@@ -112,6 +107,7 @@ MailSender.setReceiver = function(info,name){
     return true;
 }
 
+// 睡眠 xx ms
 function sleepSync(ms) {
     return new Promise(done => {
         setTimeout(done, ms)
@@ -122,6 +118,7 @@ function sleepSync(ms) {
 /* 获取需要发送邮件的人的信息 */
 MailSender.checkout = function() {
 
+    // 使用 async 与 await 关键字 是为了实现 发送间隔 ， 有兴趣可自行百度用法
     CheckTimeout.check(async function(err,rows){
         if (err) {
             console.log("check recode out deadline have something wrong！", err)
@@ -134,38 +131,15 @@ MailSender.checkout = function() {
 
         // 合并同一人的信息,键值对
         var data = this.mergeReader(rows)
-        Object.keys(data).length
+        
+        // 获取对象长度 ==> 需要发送邮件的人数
+        // Object.keys(data).length
 
-        // var count = -1;
         for(var name in data) {
-            // count += 1;
 
-            // 发送邮件
-            // (function(info,name){
-
-            //     setTimeout(function(){
-            //         // console.log(name)
-            //         // console.log(info.email)
-            //         this.sendMail(info,name)
-            //     // 每10s发一封邮件
-            //     }.bind(this),10000 * count)
-
-            // }.bind(this)(data[name],name));
             this.sendMail(data[name], name)
+
             await sleepSync(1000)
-        }
-
-        /** 有发送失败的消息 */
-        if (this.errorMsg.length > 10) {
-            // this.mailOptions.to = EMAIL.MANAGER_MAIL;
-            // var errorMsg = this.errorMsg;
-            
-            this.sendMail({email:EMAIL.MANAGER_MAIL,msg:errorMsg},"管理员")
-
-            /**
-                TODO ： 若发给管理员的邮件也失败了。。。。
-            */
-            this.errorMsg = "";
         }
 
     }.bind(this))
@@ -178,6 +152,7 @@ MailSender.checkout = function() {
 */
 MailSender.mergeReader = function(info_list){
     
+    // 已人名为键，值为要发送的消息 ==> TODO 有重名
     var hashArr = new Array();
     var time,name;
     
@@ -213,7 +188,7 @@ MailSender.setMsg = function(book_title,time) {
     time = fmtDate(time);
 
     var msg = `于 ${time} (续)借的 《${book_title}》 `;
-    if(diff >=0 && diff <= 3){
+    if(diff >=0 && diff <= 1){
         msg += `<span style='color:yellow'>还有 <strong> ${diff} 天</strong>到期 </span><br><br>`;
     }
     else{
@@ -238,4 +213,15 @@ function fmtDate(obj){
     var m = "0"+(date.getMonth()+1);
     var d = "0"+date.getDate();
     return y+"年"+m.substring(m.length-2,m.length)+"月"+d.substring(d.length-2,d.length)+"日";
+}
+
+
+function writeSendLog(data){
+    fs.appendFile("../maillog.txt",data,function(err){
+        if (err) {
+            console.log(fmtDate() + "  写文件失败  ")
+            console.log(err)
+        }
+        console.log("邮件发送记录已添加")
+    })
 }

@@ -6,7 +6,6 @@ config.js
 
 package-lock.json
 
-
 # Ignore Mac OS desktop services store
 .DS_Store
 

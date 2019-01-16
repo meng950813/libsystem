@@ -130,7 +130,7 @@ var schedule = require('node-schedule');
   每周1的1点1分30秒触发 ：'30 1 1 * * 1'
   */
 
-  // 设置为每天 凌晨 3 点执行
+  // 设置为每天 10 点执行
   schedule.scheduleJob('0 0 10 * * *', function(){
 
     console.log("checkout send email")
