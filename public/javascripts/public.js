@@ -1,8 +1,9 @@
 // 手工操作
 $(document).ready(function() {
 	$("#manual-input").click(function(){
-		$("input").removeAttr("readonly")
-		$("textarea").removeAttr("readonly")
+		$("input").removeAttr("readonly");
+		$("textarea").removeAttr("readonly");
+			
 	})
 })
 
@@ -23,34 +24,25 @@ $(document).ready(function() {
 对相应的文本框赋值，同时触发按找条形码查找商品的方法
 */
 window.onload = function(e){
-    var code = "";
-    var lastTime,nextTime;
-    var lastCode,nextCode;
 
     document.onkeypress = function(e) {
-        nextCode = e.which;
-        nextTime = new Date().getTime();
 
-        if(lastCode != null && lastTime != null && nextTime - lastTime <= 30) {
-            code += String.fromCharCode(lastCode);
-        } else if(lastCode != null && lastTime != null && nextTime - lastTime > 100){
-            code = "";
-        }
-
-        lastCode = nextCode;
-        lastTime = nextTime;
-
-    }
-
-    this.onkeypress = function(e){
         if(e.which == 13){
-            // console.log("onkeypress : ",code);
-            $("#isbn").val(code)
-            var info = getUrl()
-            getBookInfoBYISBN(code,info.url,info.type)
+			var isbn_content = $("#isbn").val()
+	
+			// 若内容为空
+			if(!isbn_content.trim().length)
+				return;
+
+			console.log("onkeypress : ", $("#isbn").val());
+			$("#isbn").val(isbn_content)
+			var info = getUrl()
+			getBookInfoBYISBN(isbn_content,info.url,info.type)
         }
     }
 
+
+	
 
     // 隐藏弹出窗
 	$("#quit").on("click",function(){
@@ -58,6 +50,10 @@ window.onload = function(e){
 		$("#myModal").hide()
 	})
 
+}
+
+function submit_input(){
+	
 }
 
 /* 扫码获取书籍信息， 
@@ -76,23 +72,23 @@ function getBookInfoBYISBN(isbn,url,type){
 			// console.log("success got data : ",data)
 			// 新书入库数据的处理
 			if (1 == type) {
-				addBook(data)
+				addBook(data);
 			}
 			// 借书数据的处理
 			else if(2 == type){
-				borrowBook(data)		
+				borrowBook(data);	
 			}
 			// 借阅历史数据的处理
 			else if (3 == type) {
-				fillHistoryInfo(data)
+				fillHistoryInfo(data);
 			}
 			// 获取图书信息
 			else if (4 == type) {
-				fillBookList(data)
+				fillBookList(data,data.length / 60);
 			}
 		},
 		error:function(err){
-			console.log("ajax error : ",err)
+			console.log("ajax error : ",err);
 		}
 	})
 }
@@ -155,7 +151,7 @@ function showModal(msg){
 	$("#myModal").show()
 }
 
-/* 填充书籍信息 */
+/* 新书入库 / 借书  填充书籍信息 */
 function fillBookInfo(book_info){
 	console.log("fillBookInfo")
 	// page of borrow
@@ -207,14 +203,14 @@ function fillBookInfo(book_info){
 	给定一个时间戳，计算 当前时间 的时长，以天为单位
 	返回显示颜色的 类名： 
 		超过还书时间  	==>		btn-danger (red);
-		还书期限前三天  	==>		btn-warning (yellow):
+		还书期限前一天  	==>		btn-warning (yellow):
 		return 			==> 	""
 */
 
 // 还书期限： 三周
 var deadline = 3 * 7 * 24 * 60 * 60 * 1000;
-// 警告期限： 3天
-var waringline = deadline - 3 * 24 * 60 * 60 * 1000;
+// 警告期限： 1天
+var waringline = deadline - 1 * 24 * 60 * 60 * 1000;
 
 function getTimeDuration(time){
 	if (!time) {

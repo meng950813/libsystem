@@ -4,37 +4,14 @@ var db=require('./dbhelper');
 var Book = {}
 
 
-//根据搜索信息查找书
-Book.findBooks=function(parm,callback){
-	var sql = "SELECT *,count(isbn) as oneTotal FROM book WHERE 1 ";
-	// 搜索方式，默认按书名搜索
-	var search = " title ";
-	// 按作者搜索
-	if(parm.searchType == 1) {
-		search = " author ";
-	}
-	// 按出版社搜索
-	else if(parm.searchType == 2){
-		search = " press "
-	}
-
-	if(parm.bookType && parm.bookType != 0){
-		sql += (" and type=" + parm.bookType )
-	}
-	if(parm.content) {
-		sql += (" and " + search + " LIKE '%" + parm.content + "%' ");
-	}
-	sql += " group by isbn;"
-	
-	console.log("there is book.js Book.findBooks ")
-	// console.log(sql)
+//根据书名信息查找
+Book.findBooksByTitle=function(book_title,callback){
+	var sql = `SELECT * FROM book_info WHERE title LIKE '%${book_title}%' `;
 
 	db.exec(sql,[],function(err,rows){
 		if(err){
 			return callback(err);
 		}
-		// console.log("findBooksByTitle:  ");
-		// console.log(rows);
 
 		//rows是一个对象数组
 		callback(err,rows);
@@ -49,15 +26,11 @@ Book.findBooksByISBN = function(isbn,callback){
 		if(err){
 			return callback(err);
 		}
-		
-		console.log("book findBooksByList: ");
-		// console.log("in book.js",rows);
 
 		//rows是一个对象数组
 		return callback(err,rows);
 	});
 };
-
 
 
 // 查找所有书
@@ -68,7 +41,7 @@ Book.findAllBooks = function(start,callback){
 			return callback(err);
 		}
 		
-		console.log("book findBooks: start : ",start);
+		// console.log("book findBooks: start : ",start);
 		// console.log(rows);
 
 		//rows是一个对象数组
@@ -76,6 +49,31 @@ Book.findAllBooks = function(start,callback){
 	});
 };
 
+//根据 book_id 查找书籍
+Book.findBookByID = function(id,callback){
+	var sql = "SELECT book_info.* FROM book_info,book_list WHERE book_id = ? and book_list.ISBN = book_info.isbn";
+	db.exec(sql,[id],function(err,rows){
+		if(err){
+			return callback(err);
+		}
+		
+		//rows是一个对象数组
+		return callback(err,rows);
+	});
+};
+
+// 获取所有图书id，以计算可用id
+Book.getBookID = function(callback){
+	//所有图书id
+	var sql = "SELECT book_id as id from book_list"
+	db.exec(sql,[],function(err,rows){
+		if (err) {
+			console.log("book.js getBookID : ",err)
+			return callback(err)
+		}
+		return callback(err,rows)
+	})
+}
 
 // 获取图书数量
 Book.getTotal = function(callback){
@@ -101,29 +99,11 @@ Book.getTotal = function(callback){
 }
 
 
-// 获取所有图书id，以计算可用id
-Book.getBookID = function(callback){
-	//所有图书id
-	var sql = "SELECT book_id as id from book_list"
-	db.exec(sql,[],function(err,rows){
-		if (err) {
-			console.log("book.js getBookID : ",err)
-			return callback(err)
-		}
-		return callback(err,rows)
-	})
-}
-
-
-// 插入新书--原本没有
+// 插入新书--数据库中没有
 Book.addBookInfo = function(info,callback){
 	console.log("in addBookInfo")
 	var sql = "insert into book_info(isbn,title,subtitle,author,publisher,cover_img,summary,pubdate) value(?,?,?,?,?,?,?,?)";
-	
-	// var authors = info.author.join()
-
-	// console.log("addBookInfo , sql is  : ",sql)
-	
+		
 	var parm = [info.isbn,info.title,info.sub_title,info.author,info.publisher,info.cover_img,info.summary,info.pubdate]
 	db.exec(sql,parm,function(err,rows){
 		if (err) {
@@ -138,7 +118,7 @@ Book.addBookInfo = function(info,callback){
 	})
 }
 
-// 添加新书 -- 原本有,修改数量
+// 添加新书 -- 数据库中已有,修改数量
 Book.updateBookInfo = function(info,callback){
 	
 	// 输入参数: isbn ,book_id

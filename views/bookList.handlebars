@@ -10,7 +10,10 @@
     
       <div class="col-lg-1 col-lg-offset-2"></div>
       <div class="col-lg-7">
-        <input id="isbn" type="text" class="col-*-12  form-control" placeholder="扫码输入ISBN" readonly>
+        <p>
+            <input id="isbn" type="text" class="col-sm-8 " placeholder="扫码输入ISBN/书名" readonly>
+        <span id="manual-input-list" class="col-sm-2 btn btn-default" style="padding: 3px">手工输入</span>
+        </p>
       </div>
   	</div>
     <hr>
@@ -64,6 +67,29 @@
             getTotalBooks()
         }
         getBookList(pageData.page)
+
+        $("#manual-input-list").click(function(){
+            // 开启手动输入, 移除只读属性
+            if( $("#isbn").attr("readonly") !== undefined ){
+                $("input").removeAttr("readonly");
+                $("textarea").removeAttr("readonly");
+                
+                $(this).html("确认提交");
+            }
+            // 已输入，提交
+            else{
+                var isbn_content = $("#isbn").val()
+	
+                // 若内容为空
+                if(!isbn_content.trim().length)
+                    return;
+
+                console.log("onkeypress : ", $("#isbn").val());
+                $("#isbn").val(isbn_content)
+                var info = getUrl()
+                getBookInfoBYISBN(isbn_content,info.url,info.type)
+            }
+        })
     })
 
     // 获取图书总量
@@ -90,7 +116,7 @@
 
     // 获取图书信息
     function getBookList(page){
-        // console.log("in getBookList ",page)
+        console.log("in getBookList ",page)
         $.ajax({
             type:"post",
             url:"/list/getInfo",
@@ -102,9 +128,7 @@
                     return
                 }
                 // 填充图书数据
-                fillBookList(data)
-                // 设置分页
-                setPagination(page)
+                fillBookList(data,page)
             },
             error:function(err){
                 console.log("ajax getBookList error")
@@ -113,7 +137,7 @@
         })
     }
 
-    function fillBookList(data,start){
+    function fillBookList(data,page){
         html = ""
         for (var i = 0; i < data.length; i++) {
             html +=`<div class="inline_block flip-container">
@@ -135,23 +159,30 @@
               </div>
           </div>` 
         }
-        $("#book-list").html(html)
-    }
+        $("#book-list").html(html);
+        
+        // 设置分页
+        setPagination(page);
 
+    }
 
     /* 设置分页 */
     function setPagination(page){
+        
+        if(!page)
+            return;
+        
         /* 尚未创建分页 */
         // console.log($("#pagination").children('li').length)
         if (0 == $("#pagination").children('li').length) {
-            createPagination()
-            return
+            createPagination();
+            return;
         }
-        // console.log("page : ",page)
+        // console.log("page : ",page);
         pageData.page = page;
-        var $target = $($("#pagination").children('li')[page])
+        var $target = $($("#pagination").children('li')[page]);
 
-        $target.attr("class","active").siblings(".active").attr("class","")
+        $target.attr("class","active").siblings(".active").attr("class","");
     }
 
     function createPagination(){
