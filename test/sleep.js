@@ -11,6 +11,3 @@ function sleepSync(ms) {
 	await sleepSync(1000)
 	console.log(new Date())
 })()
-
-
-// test ssh
