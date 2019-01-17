@@ -24,22 +24,34 @@ $(document).ready(function() {
 对相应的文本框赋值，同时触发按找条形码查找商品的方法
 */
 window.onload = function(e){
+	var code = "";
+    var lastTime,nextTime;
+    var lastCode,nextCode;
 
     document.onkeypress = function(e) {
+        nextCode = e.which;
+        nextTime = new Date().getTime();
 
+        if(lastCode != null && lastTime != null && nextTime - lastTime <= 30) {
+            code += String.fromCharCode(lastCode);
+        } else if(lastCode != null && lastTime != null && nextTime - lastTime > 100){
+            code = "";
+        }
+
+        lastCode = nextCode;
+        lastTime = nextTime;
+
+    }
+
+    this.onkeypress = function(e){
         if(e.which == 13){
-			var isbn_content = $("#isbn").val()
-	
-			// 若内容为空
-			if(!isbn_content.trim().length)
-				return;
-
-			console.log("onkeypress : ", $("#isbn").val());
-			$("#isbn").val(isbn_content)
-			var info = getUrl()
-			getBookInfoBYISBN(isbn_content,info.url,info.type)
+            // console.log("onkeypress : ",code);
+            $("#isbn").val(code)
+            var info = getUrl()
+            getBookInfoBYISBN(code,info.url,info.type)
         }
     }
+
 
 
 	
