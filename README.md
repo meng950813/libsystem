@@ -20,14 +20,14 @@ Libsystem
 
 ### 运行
 1. 通过npm安装本地服务第三方依赖模块(需要已安装Node.js,且有package.json文件)
- ```
+ ```bash
  npm install
  ```
 
 2. 启动Mysql服务
 
 3. 启动node（http://localhost:8080）
- ```
+ ```bash
  npm start
  ```
 

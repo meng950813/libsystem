@@ -131,7 +131,7 @@ var schedule = require('node-schedule');
   */
 
   // 设置为每天 10 点执行
-  schedule.scheduleJob('0 0 10 * * *', function(){
+  schedule.scheduleJob('0 0 12 * * *', function(){
 
     console.log("checkout send email")
 

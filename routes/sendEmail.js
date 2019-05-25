@@ -205,10 +205,14 @@ module.exports = MailSender;
     给定一个时间戳，返回 xx年xx月xx日
 */
 function fmtDate(obj){
+    var date;
     if (!obj){
-        return null;
+        date =  new Date();
     }
-    var date =  new Date(obj);
+    else{
+        date =  new Date(obj);
+    }
+    
     var y = 1900+date.getYear();
     var m = "0"+(date.getMonth()+1);
     var d = "0"+date.getDate();
@@ -217,6 +221,7 @@ function fmtDate(obj){
 
 
 function writeSendLog(data){
+    console.log(data)
     fs.appendFile("../maillog.txt",data,function(err){
         if (err) {
             console.log(fmtDate() + "  写文件失败  ")
